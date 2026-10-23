@@ -1,0 +1,4 @@
+Copyright (c) 2026 Goosnav LLC. All rights reserved.
+
+Auto Outbound is provided without warranty. No open-source license has been
+selected for this repository. Third-party components retain their own licenses.

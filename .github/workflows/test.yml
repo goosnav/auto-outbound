@@ -1,0 +1,26 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.13.5'
+      - run: uv sync --project app --locked
+      - run: uv run --project app ruff check --config app/pyproject.toml app/src tests
+      - run: uv run --project app python -m pytest -c app/pyproject.toml tests
+      - run: uv run --project app python app/run.py --help

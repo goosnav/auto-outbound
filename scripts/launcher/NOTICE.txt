@@ -1,0 +1,11 @@
+The native supervisor and packaging utilities are adapted for this product from
+Goosnav LLC's goosnav-software-productization skill, revision
+12b8e1fbf6f28308e266d47742b4de07441360f9.
+
+The application payload, data, configuration, and dependencies are deliberately
+separate from each stable launcher image. This directory contains build inputs;
+it is excluded from customer ZIPs.
+
+Build-only tool versions and integrity pins are in tool-versions.json. The
+external Go compiler, uv binary, AppImage runtime, AppImageTool, and rsrc resource
+compiler retain their own upstream licenses. See their official distributions.

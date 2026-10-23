@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=@NAME@
+Exec=@SLUG@
+Icon=@SLUG@
+Terminal=false
+Categories=Utility;

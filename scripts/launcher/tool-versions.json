@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "go": "1.27.3",
+  "uv": "0.13.5",
+  "appimagetool_release_id": 403069009,
+  "appimagetool_sha256": "95cbe7cce9717fce90c484e34052ee7c7f1d7635b33c12525b4776826a7d29b6",
+  "template_commit": "12b8e1fbf6f28308e266d47742b4de07441360f9",
+  "appimagetool_asset_id": 610035789,
+  "appimage_runtimes": {
+    "x86_64": {
+      "release_id": 417724209,
+      "asset_id": 657374641,
+      "url": "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64",
+      "sha256": "617aa77314d57c8b8e4fae9c3f0b35af7b30d5529cb69e98f64f92510ed98a46"
+    },
+    "aarch64": {
+      "release_id": 417724209,
+      "asset_id": 657373827,
+      "url": "https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-aarch64",
+      "sha256": "9a72a744d221576c9347ec074243acc5c3c7568896b12714e0e82e9f0bf47900"
+    }
+  },
+  "rsrc": "0.10.2"
+}

@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+: "${APPIMAGE:?AppImage runtime did not provide APPIMAGE}"
+export GOOSNAV_RELEASE_ROOT
+GOOSNAV_RELEASE_ROOT=$(dirname "$APPIMAGE")
+exec "$APPDIR/usr/bin/launcher" "$@"

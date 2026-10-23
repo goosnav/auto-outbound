@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "targets": [
+    {
+      "id": "macos-universal",
+      "native_smoke": ["macos-x64", "macos-arm64"],
+      "build_target": "macos",
+      "artifact_suffix": "macOS.app"
+    },
+    {
+      "id": "windows-x64",
+      "native_smoke": ["windows-x64"],
+      "build_target": "windows-x64",
+      "artifact_suffix": "Windows x64.exe"
+    },
+    {
+      "id": "windows-arm64",
+      "native_smoke": ["windows-arm64"],
+      "build_target": "windows-arm64",
+      "artifact_suffix": "Windows ARM64.exe"
+    },
+    {
+      "id": "linux-x86_64",
+      "native_smoke": ["linux-x64"],
+      "build_target": "linux-x64",
+      "artifact_suffix": "Linux x86_64.AppImage"
+    },
+    {
+      "id": "linux-arm64",
+      "native_smoke": ["linux-arm64"],
+      "build_target": "linux-arm64",
+      "artifact_suffix": "Linux ARM64.AppImage"
+    }
+  ]
+}

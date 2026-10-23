@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "app_id": "com.goosnav.auto-outbound",
+  "display_name": "Auto Outbound",
+  "python": "3.12.12",
+  "entry_module": "auto_outbound.start",
+  "ready_path": "/health/ready",
+  "startup_timeout_seconds": 180,
+  "preferred_port": 0,
+  "data_directory_name": "AutoOutbound"
+}

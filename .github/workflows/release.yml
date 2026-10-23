@@ -1,0 +1,41 @@
+name: Build native ZIP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+          cache: false
+      - name: Supervisor contracts
+        working-directory: scripts/launcher/supervisor
+        run: go test ./...
+      - name: Build and assemble the five images
+        run: python scripts/build_release.py --prepare-tools --target all --package
+      - name: Record development build status
+        run: |
+          echo '## Native ZIP built' >> "$GITHUB_STEP_SUMMARY"
+          echo 'This artifact is unsigned and is not an accepted release. Cross-compilation does not establish native GUI acceptance.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Verify first/second launch, persistence, recovery, browser opening and Quit on all six OS/architecture targets before promotion.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Auto-Outbound-native-development-build
+          path: |
+            dist/Auto-Outbound-M1a-unverified.zip
+            dist/Auto-Outbound-M1a-unverified.zip.sha256
+            build/images/launcher-hashes.json
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

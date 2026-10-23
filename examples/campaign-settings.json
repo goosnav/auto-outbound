@@ -1,0 +1,16 @@
+{
+  "sender": {
+    "name": "Replace with your name",
+    "company": "Replace with your company",
+    "email": "you@example.com",
+    "postal_address": "Replace with your business postal address"
+  },
+  "settings": {
+    "provider": "codex",
+    "target_leads": 25,
+    "min_fit": 60,
+    "max_agent_calls": 80,
+    "max_minutes": 90,
+    "concurrency": 2
+  }
+}
