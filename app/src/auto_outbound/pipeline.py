@@ -33,9 +33,10 @@ from .research import (
     fetch_public_text,
     normalized,
 )
-from .service import Service, fingerprint, ident
+from .service import Service, fingerprint, ident, research_fingerprint
 
 STAGES = ["discover", "research", "verify", "draft"]
+JOB_STAGES = {"report": STAGES[:3], "pipeline": STAGES}
 
 
 class Stopped(Exception):
@@ -145,7 +146,7 @@ class Context:
                 completed=0,
                 total=total,
                 current_item="",
-                stage_index=STAGES.index(stage) + 1 if j["stage"] == "pipeline" else 1,
+                stage_index=JOB_STAGES.get(j["stage"], [stage]).index(stage) + 1,
             )
         )
         self.store.event(
@@ -236,17 +237,7 @@ or what can honestly be offered. No web access is needed.
         self.offer_prepared = True
 
     def research_fingerprint(self, lead: dict) -> str:
-        return fingerprint(
-            [
-                self.campaign["icp"],
-                lead["website"],
-                self.campaign["offer"],
-                self.document_fingerprint,
-                self.settings["provider"],
-                self.settings["model"],
-                self.settings["research_pages"],
-            ]
-        )
+        return research_fingerprint(self.campaign, lead, self.document_fingerprint)
 
     def reserve(self) -> float:
         reservation = {"cost": 0.0}
@@ -460,7 +451,7 @@ class Jobs:
         JobRequest(stage=stage)
         campaign = self.store.get("campaigns", campaign_id)
         self.service.assert_idle(campaign_id)
-        if not campaign["icp"]["business_type"] and stage in {"pipeline", "discover", "research"}:
+        if not campaign["icp"]["business_type"] and stage in {"report", "pipeline", "discover", "research"}:
             raise AppError("ICP-EMPTY", "Describe the businesses you want to find.")
         if (
             stage in {"pipeline", "draft"}
@@ -484,7 +475,7 @@ class Jobs:
             "completed": 0,
             "total": 0,
             "stage_index": 0,
-            "stage_count": 4 if stage == "pipeline" else 1,
+            "stage_count": len(JOB_STAGES.get(stage, [stage])),
             "agent_calls": 0,
             "max_agent_calls": campaign["settings"]["max_agent_calls"],
             "input_tokens": None,
@@ -670,7 +661,7 @@ class Jobs:
         try:
             if job.get("requested_action") in {"pause", "cancel"}:
                 context.halt("paused" if job["requested_action"] == "pause" else "cancelled")
-            stages = STAGES if job["stage"] == "pipeline" else [job["stage"]]
+            stages = JOB_STAGES.get(job["stage"], [job["stage"]])
             for stage in stages:
                 context.check()
                 if stage == "discover":

@@ -15,7 +15,7 @@ Fetch `GET /api/session` from the same origin. Keep its token in memory and send
 | POST | `/api/campaigns/{id}/import` | Multipart CSV/XLSX lead import |
 | POST | `/api/campaigns/{id}/verification/import` | Multipart `file` plus optional `source` |
 | POST | `/api/campaigns/{id}/outcomes/import` | Multipart sender/CRM CSV |
-| POST | `/api/campaigns/{id}/jobs` | `{ "stage": "pipeline" }` or individual stage |
+| POST | `/api/campaigns/{id}/jobs` | `{ "stage": "report" }`, `pipeline`, or an individual stage |
 | GET | `/api/jobs/{id}` | Durable progress and recent events |
 | POST | `/api/jobs/{id}/pause` | Stop active calls and save state |
 | POST | `/api/jobs/{id}/resume` | Continue with retained counters and valid caches |
@@ -28,6 +28,8 @@ Fetch `GET /api/session` from the same origin. Keep its token in memory and send
 | POST | `/api/quit` | Graceful local server and agent shutdown |
 
 Campaign settings: provider, model, target_leads, min_fit, discovery_queries, max_agent_calls, max_minutes, concurrency, agent_timeout_seconds, max_turns, max_cost_usd and research_pages. See the OpenAPI models for bounds. Edits that could race an active job return `409`; pause first.
+
+`report` runs discover → research → verify without requiring an offer or sender. `pipeline` also drafts emails and requires an offer. `research_current` compares each saved record with the active brief. Edited inputs keep earlier evidence but mark it stale. CSV exports contain this flag and all research columns; Excel adds a summary sheet.
 
 Job states: queued, running, paused, completed, failed, budget_exhausted, cancelled. `completed`/`total` describe the **current stage**, not an invented global ETA. `stage_index`/`stage_count` describe pipeline position. Optional reported usage remains null when unavailable. `cost_unreported` is a conservative Claude allowance, not a claim of actual spend.
 

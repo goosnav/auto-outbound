@@ -174,6 +174,7 @@ BASE_COLUMNS = [
     "verification_source",
     "verification_at",
     "research_status",
+    "research_current",
     "status",
     "ready_to_send",
     "export_blockers",
@@ -239,8 +240,33 @@ def spreadsheet(campaign: dict, leads: list[dict], format: str) -> bytes:
     if format != "xlsx":
         raise AppError("EXPORT-FORMAT", "Choose CSV or XLSX.")
     book = Workbook()
-    sheet = book.active
-    sheet.title = "Leads"
+    summary = book.active
+    summary.title = "Summary"
+    for label, value in (
+        ("AUTO OUTBOUND", "Research report"),
+        ("List", campaign["name"]),
+        ("Data", "FICTIONAL DEMO — DO NOT CONTACT" if campaign["demo"] else "Saved company research"),
+        ("Business type", campaign.get("icp", {}).get("business_type", "")),
+        ("Location", campaign.get("icp", {}).get("location", "")),
+        ("Companies in this export", len(leads)),
+        ("Current research", sum(lead.get("research_current", lead.get("research_status") == "complete") for lead in leads)),
+        ("With email", sum(bool(lead.get("email")) for lead in leads)),
+        ("Mailbox verified", sum(lead.get("email_status") == "verified" for lead in leads)),
+        ("Report contents", "Open the Leads sheet for contacts, research, sources, and remaining gaps."),
+        ("Contact status", "A public email or MX record does not prove mailbox delivery. Review exclusions before contact."),
+    ):
+        summary.append([label, safe_cell(value)])
+    summary.column_dimensions["A"].width = 28
+    summary.column_dimensions["B"].width = 80
+    for row in summary:
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
+        row[0].font = Font(bold=True)
+    for cell in summary[1]:
+        cell.fill = PatternFill("solid", fgColor="1746C7")
+        cell.font = Font(color="FFFFFF", bold=True)
+    summary.freeze_panes = "B2"
+    sheet = book.create_sheet("Leads")
     sheet.append(EXPORT_COLUMNS)
     for row in rows:
         sheet.append([safe_cell(row.get(key, "")) for key in EXPORT_COLUMNS])

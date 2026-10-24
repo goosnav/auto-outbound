@@ -14,9 +14,12 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from pathlib import Path
 
+from launcher.build import copy_supervisor, go_build
+from launcher.package_universal import SCRIPT_LAUNCHERS
 
 ROOT = Path(__file__).resolve().parents[1]
 LAUNCHER = ROOT / "scripts" / "launcher"
@@ -96,7 +99,21 @@ def build_target(target: str, directory: Path, output: Path) -> None:
     run(*args)
 
 
-def stage_payload(staging: Path, images: Path) -> None:
+def build_script_launchers() -> None:
+    """Use the same supervisor for command-file entry points on all six targets."""
+    with tempfile.TemporaryDirectory() as directory:
+        work = Path(directory) / "supervisor"
+        copy_supervisor(work)
+        for platform, goos in (("macos", "darwin"), ("windows", "windows"), ("linux", "linux")):
+            for architecture, goarch in (("x64", "amd64"), ("arm64", "arm64")):
+                output = ROOT / "app" / "launcher" / "bin" / f"{platform}-{architecture}"
+                output.mkdir(parents=True, exist_ok=True)
+                binary = output / ("launcher.exe" if platform == "windows" else "launcher")
+                go_build(work, goos, goarch, binary, windows_gui=platform == "windows")
+                binary.chmod(0o755)
+
+
+def stage_payload(staging: Path, images: Path, script_launchers: bool = False) -> None:
     staging.mkdir(parents=True, exist_ok=True)
     app = staging / "app"
     app.mkdir(exist_ok=True)
@@ -105,12 +122,16 @@ def stage_payload(staging: Path, images: Path) -> None:
     for name in ("src", "static", "launcher"):
         shutil.copytree(
             ROOT / "app" / name, app / name, dirs_exist_ok=True,
-            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store", ".keep", "tools", "checksums.sha256"),
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store", ".keep", "tools", "bin", "checksums.sha256"),
         )
     for name in ("README.txt", "LICENSE.txt"):
         shutil.copy2(ROOT / name, staging / name)
+    if script_launchers:
+        shutil.copytree(ROOT / "app" / "launcher" / "bin", app / "launcher" / "bin")
+        for name in SCRIPT_LAUNCHERS:
+            shutil.copy2(ROOT / name, staging / name)
     for image in images.iterdir():
-        if image.name.startswith("Open Auto Outbound"):
+        if not script_launchers and image.name.startswith("Open Auto Outbound"):
             if image.is_dir():
                 shutil.copytree(image, staging / image.name, dirs_exist_ok=True)
             else:
@@ -130,6 +151,7 @@ def main() -> int:
     parser.add_argument("--target", choices=(*TARGETS, "all"), default="all")
     parser.add_argument("--prepare-tools", action="store_true", help="Download pinned build tools (requires Go on build host)")
     parser.add_argument("--reuse-images", action="store_true", help="Reuse the stable existing images; only repackage app payload")
+    parser.add_argument("--script-launchers", action="store_true", help="Build the requested .command/.cmd/.ps1/.sh desktop edition")
     parser.add_argument("--package", action="store_true", help="Assemble universal ZIP; requires all five images")
     parser.add_argument("--tools", type=Path, default=ROOT / "build" / "tooling")
     parser.add_argument("--images", type=Path, default=ROOT / "build" / "images")
@@ -142,21 +164,29 @@ def main() -> int:
     if args.prepare_tools:
         prepare_tools(args.tools)
     if not args.reuse_images:
-        for target in TARGETS if args.target == "all" else [args.target]:
-            build_target(target, args.tools, args.images)
+        if args.script_launchers:
+            version = subprocess.check_output(["go", "version"], text=True, timeout=15).split()
+            if len(version) < 3 or version[2] != f"go{PINS['go']}":
+                raise SystemExit(f"Use pinned Go {PINS['go']} to preserve stable launcher hashes.")
+            build_script_launchers()
+        else:
+            for target in TARGETS if args.target == "all" else [args.target]:
+                build_target(target, args.tools, args.images)
     hashes = {}
-    for path in sorted(args.images.rglob("*")):
-        relative = path.relative_to(args.images)
-        if path.is_file() and relative.parts[0].startswith("Open Auto Outbound"):
+    hash_root = ROOT / "app" / "launcher" / "bin" if args.script_launchers else args.images
+    for path in sorted(hash_root.rglob("*")):
+        relative = path.relative_to(hash_root)
+        if path.is_file() and (args.script_launchers or relative.parts[0].startswith("Open Auto Outbound")):
             hashes[relative.as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     (args.images / "launcher-hashes.json").write_text(json.dumps(hashes, indent=2) + "\n", "utf-8")
     if args.package:
         staging = ROOT / "build" / "release"
         if staging.exists():
             shutil.rmtree(staging)
-        stage_payload(staging, args.images)
+        stage_payload(staging, args.images, args.script_launchers)
+        options = ["--script-launchers"] if args.script_launchers else []
         run(sys.executable, LAUNCHER / "package_universal.py", "--root", staging,
-            "--name", "Auto Outbound", "--output", args.output.resolve())
+            "--name", "Auto Outbound", "--output", args.output.resolve(), *options)
         digest = hashlib.sha256(args.output.read_bytes()).hexdigest()
         args.output.with_suffix(args.output.suffix + ".sha256").write_text(f"{digest}  {args.output.name}\n", "utf-8")
         print(f"Built {args.output}; native acceptance remains unverified.")

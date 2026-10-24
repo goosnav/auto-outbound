@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <meta name="description" content="Find, research, and prepare your next business conversations.">
+  <meta name="description" content="Generate researched lead lists and export CSV or Excel reports from your computer.">
   <title>Auto Outbound · Goosnav Labs</title>
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/static/app.css">
@@ -15,26 +15,22 @@
   <div class="app-shell">
     <aside class="sidebar" aria-label="Workspace navigation">
       <a class="brand" href="#" data-action="home" aria-label="Auto Outbound home">
-        <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M6 23V9h14M13 9l10 7-10 7M6 16h16" stroke="currentColor" stroke-width="2.5" stroke-linejoin="miter"/></svg></span>
-        <span><strong>AUTO OUTBOUND</strong><small>GOOSNAV LABS</small></span>
+        <span><strong>AUTO <br>OUTBOUND<span class="brand-period">.</span></strong><small>GOOSNAV LABS</small></span>
       </a>
-      <button class="button primary new-campaign" type="button" data-action="new"><span aria-hidden="true">+</span> New campaign</button>
-      <div class="sidebar-label">WORKSPACES <span id="campaign-count"></span></div>
+      <button class="button primary new-campaign" type="button" data-action="new"><span aria-hidden="true">+</span> New list</button>
       <nav id="campaign-list" class="campaign-list" aria-label="Campaigns"><span class="sidebar-loading">Opening workspace…</span></nav>
       <div class="sidebar-bottom">
         <button class="sidebar-link" data-action="suppressions" type="button"><span aria-hidden="true">⊘</span> Do not contact</button>
-        <button class="sidebar-link" data-action="help" type="button"><span aria-hidden="true">?</span> Setup & help</button>
-        <div class="local-status"><span class="status-dot" id="connection-dot"></span><span id="connection-label">Local workspace</span><button class="icon-button quit-button" type="button" data-action="quit" title="Quit Auto Outbound" aria-label="Quit Auto Outbound"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2v7M5.5 4.5a7 7 0 1 0 9 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
+        <div class="local-status"><span class="status-dot" id="connection-dot"></span><span id="connection-label"></span><button class="icon-button quit-button" type="button" data-action="quit" title="Quit Auto Outbound" aria-label="Quit Auto Outbound"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2v7M5.5 4.5a7 7 0 1 0 9 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></div>
       </div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <div class="topbar-context"><span class="eyebrow">OUTBOUND PREPARATION</span><span class="topbar-divider" aria-hidden="true">/</span><span id="topbar-name">Workspace</span><span id="demo-badge" class="badge demo" hidden>Fictional demo</span></div>
-        <div class="topbar-right"><span id="request-status" class="request-status" role="status"></span><button type="button" class="button quiet small" data-action="help">CLI available <span aria-hidden="true">↗</span></button></div>
+        <span id="request-status" class="request-status" role="status"></span><button type="button" class="button quiet small" data-action="help">Help</button>
       </header>
       <div id="job-region" class="job-region" aria-live="polite" aria-atomic="false"></div>
       <main id="main" tabindex="-1"><div class="loading-view" role="status"><span class="loader"></span> Opening workspace</div></main>
-      <footer class="workspace-footer"><span>RESEARCH → REVIEW → EXPORT</span><span>Prepared here. Sent with your email tool.</span></footer>
+
     </div>
   </div>
   <dialog id="campaign-dialog" class="dialog campaign-dialog" aria-labelledby="campaign-dialog-title"></dialog>

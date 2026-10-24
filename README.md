@@ -1,54 +1,65 @@
 # Auto Outbound
 
-**Find relevant businesses. Research each one. Review three short emails. Export.**
+**Generate researched lead lists. Download CSV or Excel reports.**
 
-A local outbound-preparation app from Goosnav Labs. Bring an installed, authenticated **Codex** or **Claude Code** CLI. Use the browser workspace or the same workflow from the command line. Your campaigns and offers stay in a local SQLite database; the selected AI provider receives the task inputs needed for research and drafting.
+A local lead-list and report generator from Goosnav Labs. Bring an installed, authenticated **Codex** or **Claude Code** CLI. Use the browser workspace or the same workflow from the command line. Your campaigns and offers stay in a local SQLite database; the selected AI provider receives the task inputs needed for research and drafting.
 
-There is no sending transport. Export the reviewed work to your email platform or a calling list.
+Set an audience, generate the research, and download the result. Email drafts are optional. The app does not send messages.
 
 ![Auto Outbound lead workspace with real progress, research status, and a fictional demo list](docs/screenshots/leads.png)
 
-*Fictional demo data. [Sequence review](docs/screenshots/review.png) · [Mobile workspace](docs/screenshots/mobile.png).*
+*Fictional demo data. [Research report](docs/screenshots/report.png) · [Evidence review](docs/screenshots/review.png) · [Mobile workspace](docs/screenshots/mobile.png).*
 
 ## Start
 
+### Desktop ZIP — click to open
+
+Extract `Auto-Outbound-Desktop-preview.zip`. Keep the command files beside `app/`.
+
+| Computer | Open |
+|---|---|
+| macOS | Double-click `Open Auto Outbound.command` |
+| Windows | Double-click `Open Auto Outbound.cmd` |
+| PowerShell | Run `Open Auto Outbound.ps1` |
+| Linux | Run `sh "Open Auto Outbound.sh"` |
+
+The launcher opens your browser, downloads pinned Python and locked dependencies on first launch, and opens the workspace. Customers do not need Python, Node, Go, or package-manager tools. Later launches reuse the runtime and reopen an existing healthy instance. **Quit app** stops the server; closing a tab leaves it available.
+
+The script edition uses the existing Go supervisor on all six build targets. It is the command-file delivery format requested for this product. It does not replace native `.app`/`.exe`/AppImage acceptance. macOS Apple Silicon passed the launch and browser workflow here. Windows, Linux, and Intel Mac desktop behavior remain unverified. The ZIP is an unsigned preview; **M1a remains ACTIVE**.
+
+For live research, install and sign in to [Codex](https://developers.openai.com/codex/cli/) or [Claude Code](https://code.claude.com/docs/en/overview). Research uses your selected provider account. Provider subscriptions and usage limits remain separate. **Open sample** uses fictional data and needs no agent account.
+
+[Installation, data locations, recovery, and release builds](docs/INSTALL.md).
+
 ### Source checkout
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
+The generated runtime tools and supervisor binaries are excluded from Git. Developers can run the same GUI with `uv`:
 
 ```sh
-git clone https://github.com/goosnav/auto-outbound.git
-cd auto-outbound
-uv run --project app --no-dev python app/run.py gui
+uv run --project app --locked --no-dev python app/run.py gui
 ```
 
-The app opens on a free loopback port. Python and locked dependencies are handled by uv. For a complete offline demonstration, choose **Try the demo**. The four companies and all contact details are explicitly fictional and cannot enter a ready-to-send export.
-
-For live research, install and sign in to [Codex](https://developers.openai.com/codex/cli/) or [Claude Code](https://code.claude.com/docs/en/overview) first. The app checks required CLI capabilities. An older CLI produces an update instruction rather than weakening its tool restrictions. Provider subscriptions, usage limits, and any API charges are separate from this app.
+Build the complete command-file edition before using the root launchers from a fresh checkout:
 
 ```sh
-uv run --project app --no-dev python app/run.py doctor --json
+# Build host only: pinned Go from scripts/launcher/tool-versions.json.
+python3 scripts/build_release.py --script-launchers --package \
+  --output dist/Auto-Outbound-Desktop-preview.zip
 ```
 
-If a desktop launcher cannot find your CLI, use `AUTO_OUTBOUND_CODEX_BIN` or `AUTO_OUTBOUND_CLAUDE_BIN` with the native executable's absolute path. Windows `.cmd`/`.bat` wrappers are deliberately unsupported; point to the underlying `.exe`.
+The build bundles pinned `uv` for six targets. Run `--reuse-images` with the same options for application-only updates. The original native image builder remains available for full M1a verification.
 
-### Native ZIP
-
-The repository includes a reproducible builder for one ZIP with macOS universal, Windows x64/ARM64, and Linux x86_64/ARM64 launcher images. Native launchers open a setup page and provision a pinned Python runtime without requiring Python or Node on the customer machine. Codex/Claude still needs its own installation and login.
-
-All five launcher images have been built. The Linux x86_64 AppImage has passed a headless browser smoke test, managed runtime setup, second-launch reuse, restart persistence, and GUI Quit. **macOS, Windows, and ARM desktop operation remain unverified.** These are unsigned development builds, not a cross-platform accepted release. [Installation and build instructions](docs/INSTALL.md).
-
-Use GitHub **Actions → Build native ZIP → Run workflow** to build a downloadable workflow artifact. The workflow does not publish a release.
+If a launcher cannot find your agent CLI, set `AUTO_OUTBOUND_CODEX_BIN` or `AUTO_OUTBOUND_CLAUDE_BIN` to its executable path. Windows `.cmd`/`.bat` provider wrappers are unsupported; use the provider's underlying `.exe`.
 
 ## Workflow
 
 1. **Audience.** Set business type, geography, size, decision-maker roles, required attributes, exclusions, and useful buying signals. Set the target count and minimum fit.
-2. **Offer.** Describe the outcome you can deliver and your actual proof/constraints. Add up to four TXT, Markdown, PDF, DOCX, or CSV documents. Scanned PDFs need OCR first. Long offers/documents are reduced to a cached brief using the complete accepted text.
+2. **Optional context.** For a lead list, leave the offer and sender details blank if you do not need them. To prepare email drafts, describe the outcome you can deliver and your actual proof/constraints. Add up to four TXT, Markdown, PDF, DOCX, or CSV documents. Scanned PDFs need OCR first. Long offers/documents are reduced to a cached brief using the complete accepted text.
 3. **Find.** Independent discovery batches search public sources. Domain normalization merges duplicate companies. Missing contacts remain missing. Discovery stops at the target, the configured batch limit, or repeated low yield.
 4. **Research.** Each company gets a separate agent call and a saved dossier: capabilities, appropriate business contacts, evidence excerpts, fit reasoning, unknowns, and an explicitly tentative pain hypothesis.
 5. **Check.** The app checks email syntax and DNS routing, and attempts bounded independent reads of cited pages. It records inaccessible sources and unmatched evidence. It never calls MX success “mailbox verified.”
-6. **Draft.** A separate company-specific call writes all three emails from its saved dossier. If the audience, offer materials, provider/model, or research-page limit changes, run Research again before Draft. No repeated browsing per follow-up. Subjects are 1–5 words; first emails are capped at 90 words, follow-ups at 65. Copy checks flag long sentences, placeholders, unsupported source URLs, duplicate follow-ups, hype, and simulated reply prefixes.
-7. **Review and export.** Edit copy, inspect sources, approve/reject, and record mailbox verification. Export full research, a ready-to-send list, or a sourced calling list. Import sender/CRM outcomes to prevent repeat contact and track replies, meetings, and wins.
+6. **Optional email drafts.** A separate company-specific call writes all three emails from its saved dossier. If the audience, offer materials, provider/model, or research-page limit changes, run Research again before Draft. No repeated browsing per follow-up. Subjects are 1–5 words; first emails are capped at 90 words, follow-ups at 65. Copy checks flag long sentences, placeholders, unsupported source URLs, duplicate follow-ups, hype, and simulated reply prefixes.
+7. **Report.** Download CSV or Excel from the lead list or Report tab. Excel includes Summary, Leads, and Read me sheets. Full research needs no copy approval. For an email handoff, review the optional drafts and record mailbox verification first. Import sender/CRM outcomes to prevent repeat contact and track replies, meetings, and wins.
 
 The writing approach is **plain English inspired by Simplified Technical English**. It does not claim formal ASD-STE100 compliance. This app does not implement the standard's complete controlled vocabulary and rule set.
 
@@ -96,7 +107,7 @@ uv run --project app --no-dev python app/run.py campaign create \
   --provider codex --target 25 --max-calls 80 --json
 
 # Use the returned campaign ID.
-uv run --project app --no-dev python app/run.py run CAMPAIGN_ID --stage pipeline
+uv run --project app --no-dev python app/run.py run CAMPAIGN_ID --stage report
 uv run --project app --no-dev python app/run.py leads CAMPAIGN_ID --min-fit 70
 uv run --project app --no-dev python app/run.py export CAMPAIGN_ID \
   --format xlsx --scope all --output exports/research.xlsx
@@ -107,7 +118,7 @@ uv run --project app --no-dev python app/run.py export CAMPAIGN_ID \
 | `campaign list / show / configure` | Inspect or update campaign settings with JSON |
 | `offer ID --text ... --file ...` | Update offer text and documents |
 | `import-leads ID FILE` | Import CSV/XLSX; company and website required |
-| `run ID --stage discover/research/verify/draft/pipeline` | Run only the work needed |
+| `run ID --stage report/discover/research/verify/draft/pipeline` | Run only the work needed |
 | `pause JOB_ID`, `resume JOB_ID`, `cancel JOB_ID` | Control saved jobs; Ctrl-C pauses |
 | `jobs list / show` | Progress, events, usage, failures |
 | `leads ID --json` | Full records and export blockers |
@@ -136,9 +147,18 @@ Your sending platform must authenticate the sending domain, control volume, mana
 ```sh
 uv sync --project app --locked
 uv run --project app python -m pytest -c app/pyproject.toml tests
-uv run --project app ruff check --config app/pyproject.toml app/src tests
+uv run --project app ruff check --config app/pyproject.toml app/src tests scripts/build_release.py scripts/launcher/package_universal.py
+python3 -m unittest discover -s scripts/launcher -p 'test_*.py'
 ```
 
 `models` and `quality` define the records and invariants; `service` owns workflows; `storage` persists them; `pipeline` runs bounded jobs; `providers` isolates the CLI processes; `api` and `cli` are adapters. Static HTML/CSS/JavaScript ships without a frontend build or runtime CDN. [HTTP contract](docs/API.md).
 
 Tests exercise actual SQLite and API workflows, CLI parity, subprocess contracts, resumability, budgets, suppression, verifier imports, source-fetch restrictions, and spreadsheet exports. Browser smoke tests exercised the real app with fictional data. Live authenticated model output quality has **not** been benchmarked in this build; provider tests use executable fixtures. Review an initial small live cohort before increasing the target.
+
+The repeatable browser check requires an isolated running app:
+
+```sh
+uv run --project app python tests/browser_smoke.py --url http://127.0.0.1:PORT
+```
+
+It creates fictional lists and checks required inputs, an offer-free report run, filters, evidence, actual CSV/XLSX downloads, and layouts down to 320px. Use a test data directory rather than your working database.

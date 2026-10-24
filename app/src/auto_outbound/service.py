@@ -26,6 +26,12 @@ def fingerprint(value) -> str:
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
+def research_fingerprint(campaign: dict, lead: dict, documents: list) -> str:
+    settings = campaign["settings"]
+    return fingerprint([campaign["icp"], lead["website"], campaign["offer"], documents,
+                        settings["provider"], settings["model"], settings["research_pages"]])
+
+
 class Service:
     def __init__(self, root: Path | None = None):
         self.store = Store(root or data_root())
@@ -114,12 +120,16 @@ class Service:
     def campaign_detail(self, campaign_id: str) -> dict:
         campaign = self.store.get("campaigns", campaign_id)
         context = self.lead_context(campaign_id)
+        documents = self.store.documents(campaign_id)
+        document_keys = [(doc["sha256"], doc["name"]) for doc in documents]
         leads = [self.decorate(campaign, lead, context) for lead in self.store.list("leads", campaign_id)]
+        for lead in leads:
+            lead["research_current"] = lead["research_status"] == "complete" and lead["research_fingerprint"] == research_fingerprint(campaign, lead, document_keys)
         leads.sort(key=lambda lead: (-lead["fit_score"], lead["company"].lower()))
         counts = {
             "total": len(leads),
             "qualified": sum(lead["fit_score"] >= campaign["settings"]["min_fit"] and lead["research_status"] == "complete" for lead in leads),
-            "researched": sum(lead["research_status"] == "complete" for lead in leads),
+            "researched": sum(lead["research_current"] for lead in leads),
             "drafted": sum(bool(lead["drafts"]) for lead in leads),
             "approved": sum(lead["status"] == "approved" for lead in leads),
             "ready": sum(lead["ready_to_send"] for lead in leads),
@@ -132,7 +142,7 @@ class Service:
         for lead in leads:
             if lead["outcome"]:
                 outcomes[lead["outcome"]] = outcomes.get(lead["outcome"], 0) + 1
-        return {"campaign": campaign, "leads": leads, "jobs": jobs, "counts": counts, "documents": self.store.documents(campaign_id), "outcomes": outcomes}
+        return {"campaign": campaign, "leads": leads, "jobs": jobs, "counts": counts, "documents": documents, "outcomes": outcomes}
 
     def upsert_seed(self, campaign_id: str, seed: LeadSeed) -> tuple[dict, bool]:
         domain = domain_of(seed.website)

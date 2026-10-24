@@ -2,6 +2,12 @@ name: Build native ZIP
 
 on:
   workflow_dispatch:
+    inputs:
+      edition:
+        description: 'Desktop command files or native images'
+        type: choice
+        default: scripts
+        options: [scripts, native]
 
 permissions:
   contents: read
@@ -22,19 +28,23 @@ jobs:
       - name: Supervisor contracts
         working-directory: scripts/launcher/supervisor
         run: go test ./...
-      - name: Build and assemble the five images
+      - name: Build command-file edition
+        if: inputs.edition == 'scripts'
+        run: python scripts/build_release.py --script-launchers --package --output dist/Auto-Outbound-Desktop-preview.zip
+      - name: Build and assemble the five native images
+        if: inputs.edition == 'native'
         run: python scripts/build_release.py --prepare-tools --target all --package
       - name: Record development build status
         run: |
-          echo '## Native ZIP built' >> "$GITHUB_STEP_SUMMARY"
+          echo '## Desktop ZIP built' >> "$GITHUB_STEP_SUMMARY"
           echo 'This artifact is unsigned and is not an accepted release. Cross-compilation does not establish native GUI acceptance.' >> "$GITHUB_STEP_SUMMARY"
           echo 'Verify first/second launch, persistence, recovery, browser opening and Quit on all six OS/architecture targets before promotion.' >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         with:
-          name: Auto-Outbound-native-development-build
+          name: Auto-Outbound-${{ inputs.edition }}-preview
           path: |
-            dist/Auto-Outbound-M1a-unverified.zip
-            dist/Auto-Outbound-M1a-unverified.zip.sha256
+            dist/*.zip
+            dist/*.zip.sha256
             build/images/launcher-hashes.json
           if-no-files-found: error
           compression-level: 0

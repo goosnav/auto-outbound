@@ -1,5 +1,24 @@
 # Install and launch
 
+## Command-file preview
+
+Extract the complete `Auto-Outbound-Desktop-preview.zip`. Keep the command files beside `app/`.
+Double-click `Open Auto Outbound.command` on macOS, or `Open Auto Outbound.cmd` on Windows.
+PowerShell users can run `Open Auto Outbound.ps1`. Linux users can run `sh "Open Auto Outbound.sh"`.
+The scripts select the appropriate bundled supervisor for x64 or ARM64.
+
+The browser opens during setup. The supervisor downloads pinned Python and locked production dependencies into the OS application-data directory.
+It uses the same runtime, session protection, instance reuse, and Quit contract as the native images.
+First launch needs internet; customers do not install developer tools.
+The app folder can be read-only after extraction.
+
+macOS may ask before it opens a downloaded command file. Windows can apply local PowerShell policy.
+Use your OS trust controls; do not disable system-wide security settings.
+The `.cmd` entry invokes PowerShell for this process and keeps a failure message visible.
+
+The Apple Silicon command launcher passed setup, actual browser opening, lead research, CSV/XLSX downloads, instance reuse, persistence, and Quit.
+Other OS/architecture builds remain unverified. This requested script format is a preview; it does not establish full native M1a acceptance.
+
 ## Native ZIP edition
 
 The release builder produces one ZIP with five launcher images and a shared `app/` directory. This repository's initial build is a **development build**. All five images compile. The Linux x86_64 AppImage has passed setup, workspace opening, instance reuse, restart persistence, and GUI Quit in a headless browser test. Native desktop acceptance on all six targets remains incomplete. See the verification status in the main README before relying on a platform.
@@ -44,6 +63,19 @@ The launcher uses `data/`, `config/`, `logs/`, `python/`, `runtimes/`, `runtime/
 The setup page shows a short error code and log location. Network/TLS failures allow a bounded retry; missing or damaged release files require extracting a complete clean copy. The previous ready runtime is preserved when a dependency update fails. If the default browser cannot open, the launcher writes the exact local URL to `logs/OPEN_THIS_URL.txt`.
 
 If an agent is not found, confirm its command works in a terminal. Finder and desktop launchers may inherit a different PATH. `AUTO_OUTBOUND_CODEX_BIN` and `AUTO_OUTBOUND_CLAUDE_BIN` can specify executable paths when launching from a terminal.
+
+## Build the command-file ZIP
+
+The build host needs the pinned Go version in `scripts/launcher/tool-versions.json` and Python. End users do not.
+
+```sh
+python3 scripts/build_release.py --script-launchers --package \
+  --output dist/Auto-Outbound-Desktop-preview.zip
+```
+
+This builds six supervisors and bundles six pinned `uv` tools. The packager validates the explicit root whitelist and rejects secrets and runtime data.
+For application-only updates, add `--reuse-images`; launcher hashes stay unchanged.
+A fresh Git checkout needs this build before its command files can run.
 
 ## Build the native ZIP
 

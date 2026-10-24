@@ -21,6 +21,7 @@ jobs:
         with:
           version: '0.13.5'
       - run: uv sync --project app --locked
-      - run: uv run --project app ruff check --config app/pyproject.toml app/src tests
+      - run: uv run --project app ruff check --config app/pyproject.toml app/src tests scripts/build_release.py scripts/launcher/package_universal.py
       - run: uv run --project app python -m pytest -c app/pyproject.toml tests
       - run: uv run --project app python app/run.py --help
+      - run: python -m unittest discover -s scripts/launcher -p "test_*.py"

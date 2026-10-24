@@ -77,5 +77,10 @@ temp/
 # Regenerated native release payloads
 /app/launcher/tools/
 /app/launcher/checksums.sha256
+/app/launcher/bin/
 /Open Auto Outbound*
+!/Open Auto Outbound.command
+!/Open Auto Outbound.cmd
+!/Open Auto Outbound.ps1
+!/Open Auto Outbound.sh
 *.syso

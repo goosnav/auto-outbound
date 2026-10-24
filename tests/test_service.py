@@ -212,3 +212,39 @@ def test_discovery_plan_has_unique_queries_above_eight(service):
 def test_nonweb_or_credentialed_urls_rejected(url):
     with pytest.raises(ValueError):
         public_url(url)
+
+
+def test_report_workflow_needs_no_offer_or_sender_and_exports_research(service):
+    campaign = service.create_demo()
+    campaign = service.update_campaign(campaign["id"], {"offer": "", "sender": {"name": "", "company": "", "email": "", "postal_address": ""}})
+    job = Jobs(service).create(campaign["id"], "report", background=False)
+    assert job["status"] == "completed"
+    assert job["stage_index"] == job["stage_count"] == 3
+    detail = service.campaign_detail(campaign["id"])
+    assert detail["counts"]["researched"] == 4
+    assert detail["counts"]["drafted"] == 0
+    assert all(not lead["drafts"] for lead in detail["leads"])
+    rows = list(csv.DictReader(io.StringIO(service.export(campaign["id"]).decode("utf-8-sig"))))
+    assert len(rows) == 4 and all(row["source_urls"] for row in rows)
+    workbook = load_workbook(io.BytesIO(service.export(campaign["id"], "xlsx")))
+    assert workbook.sheetnames == ["Summary", "Leads", "Read me"]
+    assert workbook["Summary"]["B6"].value == 4
+    assert workbook["Leads"].max_row == 5
+    rerun = Jobs(service).create(campaign["id"], "report", background=False)
+    assert rerun["status"] == "completed"
+    assert service.campaign_detail(campaign["id"])["counts"]["total"] == 4
+
+
+def test_changed_brief_is_marked_in_report_without_losing_saved_evidence(service):
+    campaign = service.create_demo()
+    Jobs(service).create(campaign["id"], "report", background=False)
+    before = service.campaign_detail(campaign["id"])
+    assert before["counts"]["researched"] == 4
+    service.update_campaign(campaign["id"], {"icp": {"location": "A different region"}})
+    after = service.campaign_detail(campaign["id"])
+    assert after["counts"]["researched"] == 0
+    assert all(not lead["research_current"] and lead["evidence"] for lead in after["leads"])
+    rows = list(csv.DictReader(io.StringIO(service.export(campaign["id"]).decode("utf-8-sig"))))
+    assert all(row["research_current"] == "no" for row in rows)
+    Jobs(service).create(campaign["id"], "research", background=False)
+    assert service.campaign_detail(campaign["id"])["counts"]["researched"] == 4

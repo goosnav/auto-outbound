@@ -179,7 +179,7 @@ def watch(manager: Jobs, job_id: str, json_output: bool):
 @app.command("run")
 @guarded
 def run(campaign_id: str, stage: str = "pipeline", json_output: Json = False):
-    """Run pipeline, discover, research, verify, or draft. Ctrl-C pauses safely."""
+    """Run report, pipeline, discover, research, verify, or draft. Ctrl-C pauses safely."""
     manager = Jobs(Service())
     manager.recover_interrupted()
     job = manager.create(campaign_id, stage)

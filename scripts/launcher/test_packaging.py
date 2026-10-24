@@ -43,6 +43,18 @@ class ReleaseBoundaryTests(unittest.TestCase):
             with self.assertRaises(SystemExit):
                 package.validate_app(Path(directory))
 
+    def test_script_edition_requires_every_supervisor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            app = Path(directory)
+            with self.assertRaises(SystemExit):
+                package.validate_script_launchers(app)
+            for platform in ("macos", "windows", "linux"):
+                for architecture in ("x64", "arm64"):
+                    binary = app / "launcher" / "bin" / f"{platform}-{architecture}" / ("launcher.exe" if platform == "windows" else "launcher")
+                    binary.parent.mkdir(parents=True)
+                    binary.write_bytes(b"built supervisor fixture")
+            package.validate_script_launchers(app)
+
     def test_placeholder_customer_documents_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             document = Path(directory) / "LICENSE.txt"

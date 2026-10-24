@@ -176,7 +176,7 @@ class Lead(LeadSeed):
 
 
 class JobRequest(Model):
-    stage: Literal["pipeline", "discover", "research", "draft", "verify"] = "pipeline"
+    stage: Literal["report", "pipeline", "discover", "research", "draft", "verify"] = "pipeline"
 
 
 class OfferBrief(Model):
